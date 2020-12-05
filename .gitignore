@@ -1,0 +1,5 @@
+.idea
+cookies.json
+result.json
+.env
+node_modules
