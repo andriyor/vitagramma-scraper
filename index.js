@@ -58,11 +58,14 @@ require('dotenv').config();
 
   // await page.goto('file:///home/aoriekhov/Downloads/%D0%90%D0%BD%D0%B4%D1%80%D1%96%D0%B9%20%D0%9E%D1%80%D0%B5%D1%85%D0%BE%D0%B2-%20Vitagramma%20(12_5_2020%207_41_26%20PM).html');
 
-  const result = await page.evaluate(() => {
+  await page.addScriptTag({path: './node_modules/luxon/build/global/luxon.js'});
+
+  const observationsReport = await page.evaluate(() => {
     const result = [];
     const elements = document.querySelectorAll('li.code-item');
     for (const element of elements) {
-      const data = element.querySelector('p.name').innerText;
+      const unformattedDate = element.querySelector('p.name').innerText;
+      const date = window.luxon.DateTime.fromFormat(unformattedDate, "d MMMM yyyy", {locale: "uk"}).toFormat('yyyy-MM-dd')
       const rows = element.querySelectorAll('.table-result tbody tr');
       const itemResults = [];
 
@@ -93,19 +96,33 @@ require('dotenv').config();
 
           const unit = unitNode ? unitNode.innerText : "";
           let reference = referenceNode ? referenceNode.innerText : "";
-          if (reference.includes('до') && !reference.includes('\n')) {
-            const high = Number(reference.split(' ')[1])
-            if (high) {
-              reference = [
-                {
-                  "low": {
-                    "value": 0,
-                  },
-                  "high": {
-                    "value": high,
+          if (!reference.includes('\n')) {
+            if (reference.includes('до')) {
+              const high = Number(reference.split(' ')[1])
+              if (high) {
+                reference = [
+                  {
+                    "low": {
+                      "value": 0,
+                    },
+                    "high": {
+                      "value": high,
+                    }
                   }
-                }
-              ]
+                ]
+              }
+            } else if (reference.includes('-')) {
+              const [low, high] = reference.split(' -');
+              reference = [
+                  {
+                    "low": {
+                      "value": Number(low),
+                    },
+                    "high": {
+                      "value": Number(high),
+                    }
+                  }
+                ]
             }
           }
 
@@ -126,14 +143,19 @@ require('dotenv').config();
       }
 
       const item = {
-        data,
+        date,
         itemResults
       }
       result.push(item);
     }
     return result;
   });
+
+  const result = {
+    observationsReport
+  }
   const cleanResult = cleanDeep(result);
+
   console.log(util.inspect(cleanResult, false, null, true))
   fs.writeFileSync('result.json', JSON.stringify(cleanResult, null, 2));
 
