@@ -2,6 +2,7 @@ const fs = require("fs");
 const util = require('util')
 
 const puppeteer = require('puppeteer');
+const cleanDeep = require('clean-deep');
 require('dotenv').config();
 
 (async () => {
@@ -79,14 +80,41 @@ require('dotenv').config();
           const unitNode = row.querySelector(".d");
           const referenceNode = row.querySelector(".c");
 
-          const result = resultNode ? resultNode.innerText : "";
+          let result = resultNode ? resultNode.innerText : "";
+          let valueString = null;
+          let valueQuantity = null;
+          if (Number(result)) {
+            valueQuantity = {
+              value: Number(result)
+            }
+          } else {
+            valueString = result
+          }
+
           const unit = unitNode ? unitNode.innerText : "";
-          const reference = referenceNode ? referenceNode.innerText : "";
+          let reference = referenceNode ? referenceNode.innerText : "";
+          if (reference.includes('до') && !reference.includes('\n')) {
+            const high = Number(reference.split(' ')[1])
+            if (high) {
+              reference = [
+                {
+                  "low": {
+                    "value": 0,
+                  },
+                  "high": {
+                    "value": high,
+                  }
+                }
+              ]
+            }
+          }
+
           const observation = {
             title,
-            result,
             unit,
-            reference
+            reference,
+            valueString,
+            valueQuantity
           }
 
           if (!itemResults[itemResults.length - 1]['result']) {
@@ -105,7 +133,8 @@ require('dotenv').config();
     }
     return result;
   });
-  console.log(util.inspect(result, false, null, true))
-  fs.writeFileSync('result.json', JSON.stringify(result, null, 2));
+  const cleanResult = cleanDeep(result);
+  console.log(util.inspect(cleanResult, false, null, true))
+  fs.writeFileSync('result.json', JSON.stringify(cleanResult, null, 2));
 
 })();
