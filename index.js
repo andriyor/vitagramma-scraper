@@ -5,6 +5,61 @@ const puppeteer = require('puppeteer');
 const cleanDeep = require('clean-deep');
 require('dotenv').config();
 
+const parseRef = (rawReference) => {
+  const reference = [];
+  const refs = rawReference.split('\n');
+
+  refs.forEach((ref, index) => {
+    const refR = {};
+    if (ref.split(':').length > 1 && ref.split(':')[1].includes('-')) {
+      const [rawLow, rawHigh] = ref.split(':')[1].split('-');
+      refR.low = Number(rawLow);
+      refR.high = Number(rawHigh);
+    } else {
+      return
+    }
+
+    if (ref.includes('Дорослі') && ref.split(':')[1]) {
+      refR.age = {
+        low: 18,
+        high: 120
+      }
+      reference.push(refR)
+    } else if (ref.includes('Старше')) {
+      const lowAge = Number(ref.split(':')[0].replace('Старше', '').replace('років', ''));
+      if (refs[index + 1].includes('Дорослі')) {
+        refR.age = {
+          low: lowAge,
+          high: 18
+        }
+      }
+      reference.push(refR)
+    } else if (ref.split(':')[0].includes('-') && (ref.includes('роки') || ref.includes('років'))) {
+      const [rawLowAge, rawHighAge] = ref.split(':')[0].replace('роки', '').replace('років', '').split('-');
+      refR.age = {
+        low: Number(rawLowAge),
+        high: Number(rawHighAge)
+      }
+      reference.push(refR)
+    } else if (ref.includes('Жінки')) {
+      refR.appliesTo = 'Female';
+      refR.age = {
+        low: 18,
+        high: 120
+      }
+      reference.push(refR)
+    } else if (ref.includes('Чоловіки')) {
+      refR.appliesTo = 'Male';
+      refR.age = {
+        low: 18,
+        high: 120
+      }
+      reference.push(refR)
+    }
+  })
+  return reference;
+}
+
 (async () => {
   const browser = await puppeteer.launch({headless: false, args: ['--start-maximized', '--window-size=1910,1000']});
   const page = await browser.newPage();
@@ -60,7 +115,11 @@ require('dotenv').config();
 
   await page.addScriptTag({path: './node_modules/luxon/build/global/luxon.js'});
 
-  const observationsReport = await page.evaluate(() => {
+  page.on('console', consoleObj => console.log(consoleObj.text()));
+
+  await page.exposeFunction("parseRef", parseRef);
+
+  const observationsReport = await page.evaluate(async () => {
     const result = [];
     const elements = document.querySelectorAll('li.code-item');
     for (const element of elements) {
@@ -95,10 +154,11 @@ require('dotenv').config();
           }
 
           const unit = unitNode ? unitNode.innerText : "";
-          let reference = referenceNode ? referenceNode.innerText : "";
-          if (!reference.includes('\n')) {
-            if (reference.includes('до')) {
-              const high = Number(reference.split(' ')[1])
+          let rawReference = referenceNode ? referenceNode.innerText : "";
+          let reference = [];
+          if (!rawReference.includes('\n')) {
+            if (rawReference.includes('до')) {
+              const high = Number(rawReference.split(' ')[1])
               if (high) {
                 reference = [
                   {
@@ -111,19 +171,21 @@ require('dotenv').config();
                   }
                 ]
               }
-            } else if (reference.includes('-')) {
-              const [low, high] = reference.split(' -');
+            } else if (rawReference.includes('-')) {
+              const [low, high] = rawReference.split(' -');
               reference = [
-                  {
-                    "low": {
-                      "value": Number(low),
-                    },
-                    "high": {
-                      "value": Number(high),
-                    }
+                {
+                  "low": {
+                    "value": Number(low),
+                  },
+                  "high": {
+                    "value": Number(high),
                   }
-                ]
+                }
+              ]
             }
+          } else {
+            reference = await parseRef(rawReference);
           }
 
           const observation = {
