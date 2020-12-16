@@ -1,0 +1,76 @@
+[
+  {
+    "low": 21,
+    "high": 36,
+    "age": {
+      "low": 1,
+      "high": 3
+    }
+  },
+  {
+    "low": 27,
+    "high": 42,
+    "age": {
+      "low": 3,
+      "high": 5
+    }
+  },
+  {
+    "low": 28,
+    "high": 52,
+    "age": {
+      "low": 5,
+      "high": 7
+    }
+  },
+  {
+    "low": 35,
+    "high": 53,
+    "age": {
+      "low": 7,
+      "high": 9
+    }
+  },
+  {
+    "low": 34,
+    "high": 65,
+    "age": {
+      "low": 9,
+      "high": 11
+    }
+  },
+  {
+    "low": 46,
+    "high": 70,
+    "age": {
+      "low": 11,
+      "high": 13
+    }
+  },
+  {
+    "low": 50,
+    "high": 77,
+    "age": {
+      "low": 13,
+      "high": 15
+    }
+  },
+  {
+    "appliesTo": "Female",
+    "low": 44,
+    "high": 80,
+    "age": {
+      "low": 18,
+      "high": 120
+    }
+  },
+  {
+    "appliesTo": "Male",
+    "low": 62,
+    "high": 106,
+    "age": {
+      "low": 18,
+      "high": 120
+    }
+  }
+]

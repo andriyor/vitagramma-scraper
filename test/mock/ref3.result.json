@@ -1,0 +1,38 @@
+[
+  {
+    "appliesTo": "Male",
+    "low": 0,
+    "high": 15,
+    "age": {
+      "low": 17,
+      "high": 50
+    }
+  },
+  {
+    "appliesTo": "Male",
+    "low": 0,
+    "high": 20,
+    "age": {
+      "low": 50,
+      "high": 120
+    }
+  },
+  {
+    "appliesTo": "Female",
+    "low": 0,
+    "high": 20,
+    "age": {
+      "low": 17,
+      "high": 50
+    }
+  },
+  {
+    "appliesTo": "Female",
+    "low": 0,
+    "high": 30,
+    "age": {
+      "low": 50,
+      "high": 120
+    }
+  }
+]
